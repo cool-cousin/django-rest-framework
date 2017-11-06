@@ -389,11 +389,12 @@ class Request(object):
         except AttributeError:
             info = sys.exc_info()
             try:
-                return getattr(self._request, attr)
+                res = getattr(self._request, attr)
             except AttributeError:
                 six.reraise(info[0], info[1], info[2].tb_next)
-            finally:
+            else:
                 super(Request, self).__getattribute__('_httprequest_attrs').add(attr)
+                return res
 
     @property
     def DATA(self):

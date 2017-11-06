@@ -134,6 +134,7 @@ class Request(object):
 
     def __init__(self, request, parsers=None, authenticators=None,
                  negotiator=None, parser_context=None):
+        self._httprequest_attrs = set()
         self._request = request
         self.parsers = parsers or ()
         self.authenticators = authenticators or ()
@@ -378,6 +379,12 @@ class Request(object):
         to proxy it to the underlying HttpRequest object.
         """
         try:
+            if attr in super(Request, self).__getattribute__('_httprequest_attrs'):
+                return getattr(self._request, attr)
+        except AttributeError:
+            pass
+
+        try:
             return super(Request, self).__getattribute__(attr)
         except AttributeError:
             info = sys.exc_info()
@@ -385,6 +392,8 @@ class Request(object):
                 return getattr(self._request, attr)
             except AttributeError:
                 six.reraise(info[0], info[1], info[2].tb_next)
+            finally:
+                super(Request, self).__getattribute__('_httprequest_attrs').add(attr)
 
     @property
     def DATA(self):
